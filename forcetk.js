@@ -137,6 +137,41 @@ if (forcetk.Client === undefined) {
         }
     }
 
+
+    /*
+     * Low level utility function to call the Salesforce endpoint.
+     * @param path resource path relative to /services/data
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     * @param [method="GET"] HTTP method for call
+     * @param [payload=null] payload for POST/PATCH etc
+     */
+    forcetk.Client.prototype.extAjax = function(path, callback, error, method, payload) {
+        var that = this;
+        var url = path;
+
+        $j.ajax({
+            type: method || "GET",
+            async: this.asyncAjax,
+            url: (this.proxyUrl !== null) ? this.proxyUrl: url,            
+            cache: false,
+            processData: false,
+            data: payload,
+            success: callback,
+            error: error,            
+            beforeSend: function(xhr) {
+                if (that.proxyUrl !== null) {
+                    xhr.setRequestHeader('SalesforceProxy-Endpoint', url);
+                }
+                xhr.setRequestHeader(that.authzHeader, "OAuth " + that.sessionId);
+                xhr.setRequestHeader('X-User-Agent', 'salesforce-toolkit-rest-javascript/' + that.apiVersion);
+            }
+        });
+    }
+
+
+
+
     /*
      * Low level utility function to call the Salesforce endpoint.
      * @param path resource path relative to /services/data
